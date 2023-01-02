@@ -1,4 +1,4 @@
-use egui::{mutex::Mutex, TextureFilter, TextureOptions};
+use egui::mutex::Mutex;
 
 #[cfg(feature = "svg")]
 pub use usvg::FitTo;
@@ -15,7 +15,6 @@ pub struct RetainedImage {
     image: Mutex<egui::ColorImage>,
     /// Lazily loaded when we have an egui context.
     texture: Mutex<Option<egui::TextureHandle>>,
-    options: TextureOptions,
 }
 
 impl RetainedImage {
@@ -25,7 +24,6 @@ impl RetainedImage {
             size: image.size,
             image: Mutex::new(image),
             texture: Default::default(),
-            options: Default::default(),
         }
     }
 
@@ -84,43 +82,6 @@ impl RetainedImage {
         ))
     }
 
-    /// Set the texture filters to use for the image.
-    ///
-    /// **Note:** If the texture has already been uploaded to the GPU, this will require
-    /// re-uploading the texture with the updated filter.
-    ///
-    /// # Example
-    /// ```rust
-    /// # use egui_extras::RetainedImage;
-    /// # use egui::{Color32, epaint::{ColorImage, textures::TextureOptions}};
-    /// # let pixels = vec![Color32::BLACK];
-    /// # let color_image = ColorImage {
-    /// #   size: [1, 1],
-    /// #   pixels,
-    /// # };
-    /// #
-    /// // Upload a pixel art image without it getting blurry when resized
-    /// let image = RetainedImage::from_color_image("my_image", color_image)
-    ///     .with_options(TextureOptions::NEAREST);
-    /// ```
-    pub fn with_options(mut self, options: TextureOptions) -> Self {
-        self.options = options;
-
-        // If the texture has already been uploaded, this will force it to be re-uploaded with the
-        // updated filter.
-        *self.texture.lock() = None;
-
-        self
-    }
-
-    #[deprecated = "Use with_options instead"]
-    pub fn with_texture_filter(self, filter: TextureFilter) -> Self {
-        self.with_options(TextureOptions {
-            magnification: filter,
-            minification: filter,
-        })
-    }
-
     /// The size of the image data (number of pixels wide/high).
     pub fn size(&self) -> [usize; 2] {
         self.size
@@ -154,7 +115,7 @@ impl RetainedImage {
             .get_or_insert_with(|| {
                 let image: &mut ColorImage = &mut self.image.lock();
                 let image = std::mem::take(image);
-                ctx.load_texture(&self.debug_name, image, self.options)
+                ctx.load_texture(&self.debug_name, image, Default::default())
             })
             .id()
     }
