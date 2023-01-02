@@ -44,7 +44,7 @@ screen_reader = ["tts"]
 serde = ["egui/serde", "dep:serde"]
 
 ## Enables Wayland support.
-wayland = ["winit/wayland"]
+wayland = []
 
 [dependencies]
 egui = { version = "0.20.0", path = "../egui", default-features = false, features = [
@@ -54,7 +54,7 @@ instant = { version = "0.1", features = [
   "wasm-bindgen",
 ] } # We use instant so we can (maybe) compile for web
 tracing = { version = "0.1", default-features = false, features = ["std"] }
-winit = { version = "0.27.2", default-features = false }
+winit = { package = "tao", version = "0.15", default-features = false }
 
 #! ### Optional dependencies
 
