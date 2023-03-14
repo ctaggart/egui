@@ -78,7 +78,7 @@ trait WinitApp {
 /// multiple times. This is just a limitation of winit.
 fn with_event_loop(f: impl FnOnce(&mut EventLoop<RequestRepaintEvent>)) {
     use std::cell::RefCell;
-    thread_local!(static EVENT_LOOP: RefCell<EventLoop<RequestRepaintEvent>> = RefCell::new(winit::event_loop::EventLoopBuilder::with_user_event().build()));
+    thread_local!(static EVENT_LOOP: RefCell<EventLoop<RequestRepaintEvent>> = RefCell::new(winit::event_loop::EventLoop::with_user_event()));
 
     EVENT_LOOP.with(|event_loop| {
         f(&mut *event_loop.borrow_mut());
@@ -157,7 +157,7 @@ fn run_and_return(event_loop: &mut EventLoop<RequestRepaintEvent>, mut winit_app
 
     // Needed to clean the event_loop:
     event_loop.run_return(|_, _, control_flow| {
-        control_flow.set_exit();
+        *control_flow = ControlFlow::Exit;
     });
 }
 
@@ -459,7 +459,7 @@ mod glow_integration {
                 run_and_return(event_loop, glow_eframe);
             });
         } else {
-            let event_loop = winit::event_loop::EventLoopBuilder::with_user_event().build();
+            let event_loop = winit::event_loop::EventLoop::with_user_event();
             let glow_eframe = GlowWinitApp::new(&event_loop, app_name, native_options, app_creator);
             run_and_exit(event_loop, glow_eframe);
         }
@@ -513,7 +513,7 @@ mod wgpu_integration {
                     native_options.multisampling.max(1) as _,
                 );
                 #[cfg(not(target_os = "android"))]
-                painter.set_window(Some(&window));
+                // TODO(tauri) painter.set_window(Some(&window));
                 painter
             };
 
@@ -722,7 +722,7 @@ mod wgpu_integration {
                 run_and_return(event_loop, wgpu_eframe);
             });
         } else {
-            let event_loop = winit::event_loop::EventLoopBuilder::with_user_event().build();
+            let event_loop = winit::event_loop::EventLoop::with_user_event();
             let wgpu_eframe = WgpuWinitApp::new(&event_loop, app_name, native_options, app_creator);
             run_and_exit(event_loop, wgpu_eframe);
         }

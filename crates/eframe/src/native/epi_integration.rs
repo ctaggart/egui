@@ -1,6 +1,8 @@
 use crate::{epi, Theme, WindowInfo};
 use egui_winit::{native_pixels_per_point, WindowSettings};
 use winit::event_loop::EventLoopWindowTarget;
+#[cfg(target_os = "linux")]
+use winit::platform::unix::WindowBuilderExtUnix;
 
 pub fn points_to_size(points: egui::Vec2) -> winit::dpi::LogicalSize<f64> {
     winit::dpi::LogicalSize {
@@ -60,6 +62,14 @@ pub fn window_builder(
         .with_resizable(*resizable)
         .with_transparent(*transparent)
         .with_window_icon(window_icon);
+
+    #[cfg(target_os = "linux")]
+    {
+        window_builder = window_builder.with_rgba_visual(true);
+        window_builder = window_builder.with_app_paintable(true);
+        window_builder = window_builder.with_double_buffered(true);
+        window_builder = window_builder.with_transparent_draw(!*transparent);
+    }
 
     if let Some(min_size) = *min_window_size {
         window_builder = window_builder.with_min_inner_size(points_to_size(min_size));
@@ -176,7 +186,7 @@ pub fn create_storage(_app_name: &str) -> Option<Box<dyn epi::Storage>> {
 
 // ----------------------------------------------------------------------------
 
-/// Everything needed to make a winit-based integration for [`epi`].
+/// Everything needed to make a winit-based integration for epi.
 pub struct EpiIntegration {
     pub frame: epi::Frame,
     last_auto_save: std::time::Instant,
